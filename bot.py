@@ -4,15 +4,18 @@ from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
 from openai import OpenAI
 
-# Загрузка переменных окружения
+# Конфигурация переменных окружения
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-WEBHOOK_URL = os.getenv("WEBHOOK_URL")  # добавь в Render
+WEBHOOK_URL = os.getenv("WEBHOOK_URL")
 
-# Настройка логов
-logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO)
+# Логирование
+logging.basicConfig(
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    level=logging.INFO
+)
 
-# OpenAI клиент
+# Клиент OpenAI
 client = OpenAI(api_key=OPENAI_API_KEY)
 
 # Системный промпт
@@ -31,7 +34,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         "Я — Интуи, твой проводник по миру снов. Расскажи, что тебе приснилось."
     )
 
-# Обработка текстовых сообщений
+# Обработка сообщений
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_input = update.message.text
     await update.message.reply_text("Я думаю над твоим сном...")
@@ -56,22 +59,25 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
     await update.message.reply_text(reply)
 
-# Запуск бота с Webhook
+# Запуск приложения с webhook
 async def main():
-    if not TELEGRAM_TOKEN:
-        raise ValueError("TELEGRAM_TOKEN не задан!")
+    if not TELEGRAM_TOKEN or not WEBHOOK_URL:
+        raise ValueError("Не заданы переменные TELEGRAM_TOKEN или WEBHOOK_URL")
 
     application = Application.builder().token(TELEGRAM_TOKEN).build()
 
     application.add_handler(CommandHandler("start", start))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
-    # Настройка webhook
     await application.initialize()
-    await application.start()
     await application.bot.set_webhook(url=WEBHOOK_URL)
-    await application.updater.start_polling()
-    await application.updater.idle()
+    await application.start()
+
+    await application.run_webhook(
+        listen="0.0.0.0",
+        port=int(os.environ.get("PORT", 10000)),
+        webhook_url=WEBHOOK_URL
+    )
 
 if __name__ == "__main__":
     import asyncio
