@@ -1,18 +1,21 @@
-
+import os
 import logging
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
-import openai
-import os
+from openai import OpenAI
 
+# Загрузка переменных окружения
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+WEBHOOK_URL = os.getenv("WEBHOOK_URL")  # добавь в Render
 
-if OPENAI_API_KEY:
-    openai.api_key = OPENAI_API_KEY
-else:
-    print("⚠️ ВНИМАНИЕ: OPENAI_API_KEY не задан. Ответы от ИИ работать не будут.")
+# Настройка логов
+logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO)
 
+# OpenAI клиент
+client = OpenAI(api_key=OPENAI_API_KEY)
+
+# Системный промпт
 SYSTEM_PROMPT = (
     "Ты — Интуи, виртуальная интерпретаторка снов. "
     "Твой стиль — тёплый, философский, обволакивающий. "
@@ -20,13 +23,15 @@ SYSTEM_PROMPT = (
     "Анализируй каждый сон как отражение внутреннего мира человека."
 )
 
+# Команда /start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user = update.effective_user
     await update.message.reply_html(
-        rf"Привет, {user.mention_html()}! ✨"
+        rf"Привет, {user.mention_html()}! ✨\n"
         "Я — Интуи, твой проводник по миру снов. Расскажи, что тебе приснилось."
     )
 
+# Обработка текстовых сообщений
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_input = update.message.text
     await update.message.reply_text("Я думаю над твоим сном...")
@@ -36,7 +41,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         return
 
     try:
-        response = openai.ChatCompletion.create(
+        response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT},
@@ -45,30 +50,29 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             max_tokens=700,
             temperature=0.8
         )
-        reply = response.choices[0].message["content"].strip()
+        reply = response.choices[0].message.content.strip()
     except Exception as e:
         reply = f"⚠️ Ошибка при обращении к ИИ: {e}"
 
     await update.message.reply_text(reply)
 
-def main():
-    logging.basicConfig(level=logging.INFO)
+# Запуск бота с Webhook
+async def main():
+    if not TELEGRAM_TOKEN:
+        raise ValueError("TELEGRAM_TOKEN не задан!")
 
-    app = Application.builder().token(TELEGRAM_TOKEN).build()
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+    application = Application.builder().token(TELEGRAM_TOKEN).build()
 
-    WEBHOOK_URL = os.getenv("WEBHOOK_URL")
-    if not WEBHOOK_URL:
-        print("❌ WEBHOOK_URL не задан. Завершаем работу.")
-        return
+    application.add_handler(CommandHandler("start", start))
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
-    app.run_webhook(
-        listen="0.0.0.0",
-        port=int(os.environ.get("PORT", 10000)),
-        webhook_url=WEBHOOK_URL
-    )
-
+    # Настройка webhook
+    await application.initialize()
+    await application.start()
+    await application.bot.set_webhook(url=WEBHOOK_URL)
+    await application.updater.start_polling()
+    await application.updater.idle()
 
 if __name__ == "__main__":
-    main()
+    import asyncio
+    asyncio.run(main())
