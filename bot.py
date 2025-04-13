@@ -35,6 +35,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         "HTTP-Referer": "https://t.me/Intui_Dream_Bot",  # или твой домен
         "X-Title": "Intui Dream Bot",
         "Content-Type": "application/json"
+}
     payload = {
     "model": "mistralai/mistral-7b-instruct",  # Бесплатная модель
     "messages": [
