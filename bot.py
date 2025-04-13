@@ -23,7 +23,7 @@ SYSTEM_PROMPT = (
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user = update.effective_user
     await update.message.reply_html(
-        rf"Привет, {user.mention_html()}! ✨\n"
+        rf"Привет, {user.mention_html()}! ✨"
         "Я — Интуи, твой проводник по миру снов. Расскажи, что тебе приснилось."
     )
 
