@@ -37,7 +37,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         "Content-Type": "application/json"
 }
     payload = {
-    "model": "mistralai/mistral-7b-instruct",
+    "model": "openchat/openchat-7b",
     "messages": [
         {"role": "system", "content": SYSTEM_PROMPT},
         {"role": "user", "content": user_input}
