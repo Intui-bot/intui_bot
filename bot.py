@@ -35,17 +35,16 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         "HTTP-Referer": "https://t.me/Intui_Dream_Bot",  # или твой домен
         "X-Title": "Intui Dream Bot",
         "Content-Type": "application/json"
-    }
-
     payload = {
-        "model": "openai/gpt-3.5-turbo",
-        "messages": [
-            {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": user_input}
-        ],
-        "temperature": 0.8,
-        "max_tokens": 700
-    }
+    "model": "mistralai/mistral-7b-instruct",  # Бесплатная модель
+    "messages": [
+        {"role": "system", "content": SYSTEM_PROMPT},
+        {"role": "user", "content": user_input}
+    ],
+    "temperature": 0.8,
+    "max_tokens": 700
+}
+
 
     try:
         response = requests.post("https://openrouter.ai/api/v1/chat/completions", json=payload, headers=headers, timeout=30)
