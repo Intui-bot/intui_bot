@@ -81,4 +81,19 @@ async def main():
 
 if __name__ == "__main__":
     import asyncio
-    asyncio.run(main())
+
+    TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
+    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+    WEBHOOK_URL = os.getenv("WEBHOOK_URL")
+
+    application = Application.builder().token(TELEGRAM_TOKEN).build()
+
+    application.add_handler(CommandHandler("start", start))
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+
+    application.run_webhook(
+        listen="0.0.0.0",
+        port=int(os.environ.get("PORT", 10000)),
+        webhook_url=WEBHOOK_URL
+    )
+
