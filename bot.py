@@ -37,7 +37,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         "Content-Type": "application/json"
 }
     payload = {
-    "model": "mistralai/mistral-7b-instruct",  # Бесплатная модель
+    "model": "mistralai/mistral-7b-instruct",
     "messages": [
         {"role": "system", "content": SYSTEM_PROMPT},
         {"role": "user", "content": user_input}
@@ -45,6 +45,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     "temperature": 0.8,
     "max_tokens": 700
 }
+
 
 
     try:
