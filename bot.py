@@ -2,13 +2,16 @@
 import logging
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
-
 import openai
 import os
 
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-openai.api_key = OPENAI_API_KEY
+
+if OPENAI_API_KEY:
+    openai.api_key = OPENAI_API_KEY
+else:
+    print("⚠️ ВНИМАНИЕ: OPENAI_API_KEY не задан. Ответы от ИИ работать не будут.")
 
 SYSTEM_PROMPT = (
     "Ты — Интуи, виртуальная интерпретаторка снов. "
@@ -28,6 +31,10 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     user_input = update.message.text
     await update.message.reply_text("Я думаю над твоим сном...")
 
+    if not OPENAI_API_KEY:
+        await update.message.reply_text("🔒 Интерпретация временно недоступна: ключ OpenAI не задан.")
+        return
+
     try:
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
@@ -40,17 +47,15 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         )
         reply = response.choices[0].message["content"].strip()
     except Exception as e:
-        reply = "Извини, возникла ошибка при обращении к ИИ. Попробуй позже."
+        reply = f"⚠️ Ошибка при обращении к ИИ: {e}"
 
     await update.message.reply_text(reply)
 
 def main():
     logging.basicConfig(level=logging.INFO)
     app = Application.builder().token(TELEGRAM_TOKEN).build()
-
     app.add_handler(CommandHandler("start", start))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
-
     app.run_polling()
 
 if __name__ == "__main__":
