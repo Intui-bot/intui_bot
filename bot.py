@@ -252,6 +252,20 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
         # Логируем usage токенов
         usage = response.usage
+# Отправляем usage-статистику только администратору (не пользователю!)
+if update.effective_user.id == ADMIN_TELEGRAM_ID:
+    await context.bot.send_message(
+        chat_id=ADMIN_TELEGRAM_ID,
+        text=(
+            f"📊 Новый запрос:\n"
+            f"Сон: {user_input[:30]}...\n"
+            f"Модель: gpt-4o\n"
+            f"Prompt tokens: {usage.prompt_tokens}\n"
+            f"Completion tokens: {usage.completion_tokens}\n"
+            f"Total tokens: {usage.total_tokens}"
+        )
+    )
+
         logging.info(
             f"Usage — Prompt: {usage.prompt_tokens} токенов, "
             f"Completion: {usage.completion_tokens} токенов, "
