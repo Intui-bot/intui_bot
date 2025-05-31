@@ -116,7 +116,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
     user = update.effective_user
     await update.message.reply_html(
-        rf"Приветствую тебя, {user.mention_html()}! ✨\n"
+     rf "Приветствую тебя, {user.mention_html()}!✨ \n"
     "Я — Интуи, твоя проводница по миру снов.\n"
     "У меня есть несколько вариантов стиля интерпретации сна.\n"
     "Ты сможешь выбрать для себя удобный и близкий.\n"
@@ -174,7 +174,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         selected_style = data.replace("style_", "")
         context.user_data["style"] = selected_style
         await query.edit_message_text(
-            f"✅ Стиль интерпретации установлен: *{selected_style}*",
+            f"✅ Стиль интерпретации установлен: *{selected_style}*. Теперь опиши свой сон.",
             parse_mode="Markdown"
         )
         return
