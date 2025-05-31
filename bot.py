@@ -280,10 +280,23 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             history.pop(0)
 
     except Exception as e:
-        # Внутренняя ошибка — логируем и уведомляем
-        error_message = f"Ошибка при обращении к OpenAI: {e}"
-        logging.error(error_message)
-        send_error_email(subject="Intui Bot Error", body=error_message)
+    error_message = f"Ошибка при обращении к OpenAI: {e}"
+    logging.error(error_message)
+    send_error_email(subject="Intui Bot Error", body=error_message)
+
+    try:
+        await context.bot.send_message(
+            chat_id=ADMIN_TELEGRAM_ID,
+            text=f"⚠️ Интуи поймала ошибку:\n{error_message}"
+        )
+    except Exception as tg_err:
+        logging.error(f"Ошибка при отправке Telegram-сообщения админу: {tg_err}")
+
+    # 👉 Заглушка только для пользователя
+    fallback_text = get_random_fallback()
+    await update.message.reply_text(fallback_text)
+    return  # 🛑 Завершаем обработку, чтобы не шёл дальше
+
 
         # Уведомляем админа в Telegram
         try:
