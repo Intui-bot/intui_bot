@@ -116,7 +116,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
     user = update.effective_user
     await update.message.reply_html(
-     rf "Приветствую тебя, {user.mention_html()}!✨ \n"
+     rf "Приветствую тебя, {user.mention_html()}!✨"
     "Я — Интуи, твоя проводница по миру снов.\n"
     "У меня есть несколько вариантов стиля интерпретации сна.\n"
     "Ты сможешь выбрать для себя удобный и близкий.\n"
