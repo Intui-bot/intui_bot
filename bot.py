@@ -252,36 +252,26 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
         # Логируем usage токенов
         usage = response.usage
-# Отправляем usage-статистику только администратору (не пользователю!)
-if update.effective_user.id == ADMIN_TELEGRAM_ID:
-    await context.bot.send_message(
-        chat_id=ADMIN_TELEGRAM_ID,
-        text=(
-            f"📊 Новый запрос:\n"
-            f"Сон: {user_input[:30]}...\n"
-            f"Модель: gpt-4o\n"
-            f"Prompt tokens: {usage.prompt_tokens}\n"
-            f"Completion tokens: {usage.completion_tokens}\n"
-            f"Total tokens: {usage.total_tokens}"
-        )
-    )
 
+        # Отправляем usage-статистику только администратору (не пользователю!)
+        if update.effective_user.id == ADMIN_TELEGRAM_ID:
+            await context.bot.send_message(
+                chat_id=ADMIN_TELEGRAM_ID,
+                text=(
+                    f"📊 Новый запрос:\n"
+                    f"Сон: {user_input[:30]}...\n"
+                    f"Модель: gpt-4o\n"
+                    f"Prompt tokens: {usage.prompt_tokens}\n"
+                    f"Completion tokens: {usage.completion_tokens}\n"
+                    f"Total tokens: {usage.total_tokens}"
+                )
+            )
+
+        # Логируем usage в файл
         logging.info(
             f"Usage — Prompt: {usage.prompt_tokens} токенов, "
             f"Completion: {usage.completion_tokens} токенов, "
             f"Total: {usage.total_tokens} токенов."
-        )
-        # Отправляем администратору детали usage
-        await context.bot.send_message(
-            chat_id=ADMIN_TELEGRAM_ID,
-            text=(
-                f"📊 Новый запрос:\n"
-                f"Сон: {user_input[:30]}...\n"
-                f"Модель: gpt-4o\n"
-                f"Prompt tokens: {usage.prompt_tokens}\n"
-                f"Completion tokens: {usage.completion_tokens}\n"
-                f"Total tokens: {usage.total_tokens}"
-            )
         )
 
         # Собираем текст ответа
@@ -294,23 +284,10 @@ if update.effective_user.id == ADMIN_TELEGRAM_ID:
             history.pop(0)
 
     except Exception as e:
-    error_message = f"Ошибка при обращении к OpenAI: {e}"
-    logging.error(error_message)
-    send_error_email(subject="Intui Bot Error", body=error_message)
-
-    try:
-        await context.bot.send_message(
-            chat_id=ADMIN_TELEGRAM_ID,
-            text=f"⚠️ Интуи поймала ошибку:\n{error_message}"
-        )
-    except Exception as tg_err:
-        logging.error(f"Ошибка при отправке Telegram-сообщения админу: {tg_err}")
-
-    # 👉 Заглушка только для пользователя
-    fallback_text = get_random_fallback()
-    await update.message.reply_text(fallback_text)
-    return  # 🛑 Завершаем обработку, чтобы не шёл дальше
-
+        # Внутренняя ошибка — логируем и уведомляем
+        error_message = f"Ошибка при обращении к OpenAI: {e}"
+        logging.error(error_message)
+        send_error_email(subject="Intui Bot Error", body=error_message)
 
         # Уведомляем админа в Telegram
         try:
@@ -322,7 +299,9 @@ if update.effective_user.id == ADMIN_TELEGRAM_ID:
             logging.error(f"Ошибка при отправке Telegram-сообщения админу: {tg_err}")
 
         # Случайная поэтичная заглушка
-        reply_text = get_random_fallback()
+        fallback_text = get_random_fallback()
+        await update.message.reply_text(fallback_text)
+        return  # Завершаем обработку, чтобы не шёл дальше
 
     # Форматирование ответа: выделяем блок "Совет:"
     if "Совет:" in reply_text:
