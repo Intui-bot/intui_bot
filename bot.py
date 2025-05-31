@@ -278,7 +278,21 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
         reply_text = f"⚠️ {error_message}"
 
+   if "Совет:" in reply_text:
+    parts = reply_text.split("Совет:", maxsplit=1)
+    main_text = parts[0].strip()
+    advice_block = parts[1].strip()
+
+    # Формируем HTML-ответ
+    formatted_reply = (
+        f"{main_text}\n\n"
+        f"<b>📝 Совет:</b> <i>{advice_block}</i>"
+    )
+
+    await update.message.reply_html(formatted_reply)
+else:
     await update.message.reply_text(reply_text)
+
 
 
 # ─────────────────────────────────────────────────────────────────────────────
