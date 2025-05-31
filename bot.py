@@ -25,16 +25,18 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         "Я — Интуи, твой проводник по миру снов. Расскажи, что тебе приснилось."
     )
 
+from openai import OpenAI
+
 # Обработка сообщений
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_input = update.message.text
     await update.message.reply_text("Я думаю над твоим сном...")
 
-    openai.api_key = os.getenv("OPENAI_API_KEY")
-
     try:
-        response = openai.ChatCompletion.create(
-            model="gpt-4o",  # Можно заменить на gpt-3.5-turbo, если нет доступа к 4o
+        client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+        response = client.chat.completions.create(
+            model="gpt-4o",
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": user_input}
@@ -42,7 +44,8 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             temperature=0.8,
             max_tokens=700
         )
-        reply = response["choices"][0]["message"]["content"].strip()
+
+        reply = response.choices[0].message.content.strip()
     except Exception as e:
         reply = f"⚠️ Ошибка при обращении к OpenAI: {e}"
 
