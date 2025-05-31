@@ -30,33 +30,21 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     user_input = update.message.text
     await update.message.reply_text("Я думаю над твоим сном...")
 
-    headers = {
-        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
-        "HTTP-Referer": "https://t.me/Intui_Dream_Bot",  # или твой домен
-        "X-Title": "Intui Dream Bot",
-        "Content-Type": "application/json"
-}
-    payload = {
-    "model": "gryphe/mythomax-l2-13b",
-    "messages": [
-        {"role": "system", "content": SYSTEM_PROMPT},
-        {"role": "user", "content": user_input}
-    ],
-    "temperature": 0.8,
-    "max_tokens": 700
-}
-
-
+    openai.api_key = os.getenv("OPENAI_API_KEY")
 
     try:
-        response = requests.post("https://openrouter.ai/api/v1/chat/completions", json=payload, headers=headers, timeout=30)
-        result = response.json()
-        if "choices" in result:
-            reply = result["choices"][0]["message"]["content"].strip()
-        else:
-            reply = f"⚠️ Ошибка OpenRouter: {result.get('error', {}).get('message', 'Неизвестная ошибка')}"
+        response = openai.ChatCompletion.create(
+            model="gpt-4o",  # Можно заменить на gpt-3.5-turbo, если нет доступа к 4o
+            messages=[
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": user_input}
+            ],
+            temperature=0.8,
+            max_tokens=700
+        )
+        reply = response["choices"][0]["message"]["content"].strip()
     except Exception as e:
-        reply = f"⚠️ Ошибка при обращении к ИИ: {e}"
+        reply = f"⚠️ Ошибка при обращении к OpenAI: {e}"
 
     await update.message.reply_text(reply)
 
